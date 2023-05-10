@@ -1,0 +1,188 @@
+openapi: '3.0.3'
+
+info:
+  title: 'mysql-slow-query-log-analyzer'
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths: {}
+
+components:
+  schemas:
+
+    #----------------------------------------
+    # API fields
+    #----------------------------------------
+
+    LongId:
+      type: integer
+      format: int64
+      example: 1
+
+    DateTime:
+      type: string
+      format: date-time
+      example: "2018-12-01T10:00:00Z"
+
+    String:
+      type: string
+      example: "foo"
+
+    UUID:
+      type: string
+      format: uuid
+      example: c9106593-2d6c-40eb-8504-66b0ef41ad2d
+
+    #----------------------------------------
+    # Common Model
+    #----------------------------------------
+
+    LongArray:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/LongId'
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          example: /tool/constraint-violation
+        title:
+          type: string
+          example: 제출한 요청이 유효하지 않습니다
+        detail:
+          type: string
+        fieldErrors:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          $ref: '#/components/schemas/ErrorCode'
+
+    ErrorCode:
+      type: string
+      example:
+        - NotNull
+        - Size
+
+    Page:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int32
+          default: 20
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          format: int32
+          example: 5
+        number:
+          type: integer
+          format: int32
+          default: 1
+          example: 1
+
+    #----------------------------------------
+    # API Model
+    #----------------------------------------
+
+
+  parameters:
+
+    PageParam:
+      in: query
+      name: page
+      schema:
+        type: integer
+        format: int32
+        default: 1
+
+    SizeParam:
+      in: query
+      name: size
+      schema:
+        type: integer
+        format: int32
+        default: 10
+
+  responses:
+
+    Created:
+      description: Created
+
+    Accepted:
+      description: Accepted
+
+    NoContent:
+      description: No Content
+
+    EmptyContent:
+      description: No Content
+      content:
+        application/json: { }
+
+    BadRequest:
+      description: Bad Request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    NotFound:
+      description: Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  securitySchemes: {}
+
+security: []

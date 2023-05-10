@@ -1,0 +1,33 @@
+openApiGenerate {
+    generatorName = 'spring'
+    inputSpec = "${rootDir}/src/main/resources/swagger/api.yaml"
+    outputDir = "${buildDir}/openapi".toString()
+    apiPackage = 'dev.appkr.tool.rest'
+    modelPackage = 'dev.appkr.tool.rest'
+    modelNameSuffix = 'Dto'
+    apiFilesConstrainedTo = ['']
+    modelFilesConstrainedTo = ['']
+    supportingFilesConstrainedTo = ['ApiUtil.java']
+    configOptions = [
+            delegatePattern        : 'true',
+            title                  : 'address',
+            useTags                : 'true',
+            dateLibrary            : 'java8',
+            java8                  : 'true',
+            hideGenerationTimestamp: 'true',
+            useSpringBoot3         : 'true',
+            useJakartaEe           : 'true'
+    ]
+    validateSpec = true
+}
+
+sourceSets {
+    main.java.srcDir layout.buildDirectory.file('openapi/src/main/java')
+}
+
+compileJava.dependsOn('openApiGenerate')
+
+task redoc(type:Exec) {
+    // For this to work correctly, `yarn global add redoc`
+    commandLine 'npx', 'redoc-cli', 'bundle', "${rootDir}/src/main/resources/swagger/api.yaml", '-o', "${buildDir}/redoc.html"
+}
