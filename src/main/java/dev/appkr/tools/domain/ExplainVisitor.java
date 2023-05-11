@@ -14,13 +14,14 @@ public class ExplainVisitor {
     this.em = em;
   }
 
-  public void visit(SlowQueryLog visitable) {
+  public void visit(SlowQueryLog.LogEntry visitable) {
     if (isEmpty(visitable.getSql())) {
       return;
     }
 
-    @SuppressWarnings("unchecked") final List<Object[]> resultList = em
-        .createNativeQuery("EXPLAIN " + visitable.getSql())
+    @SuppressWarnings("unchecked")
+    final List<Object[]> resultList = em
+        .createNativeQuery(" EXPLAIN " + visitable.getSql())
         .getResultList();
 
     List<ExecutionPlan> executionPlans = resultList.stream()

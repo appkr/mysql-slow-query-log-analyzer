@@ -14,20 +14,21 @@ public class SlowQueryLogEntryMapper implements DtoMapper<SlowQueryLog, SlowQuer
 
   @Override
   public SlowQueryLogEntry toDto(SlowQueryLog entity) {
-    if (entity == null) {
+    if (entity == null || entity.getLogEntry() == null) {
       return null;
     }
 
+    final SlowQueryLog.LogEntry entry = entity.getLogEntry();
     return new SlowQueryLogEntry()
-        .time(dateTimeMapper.toOffsetDateTime(entity.getTime()))
-        .user(entity.getUser())
-        .host(entity.getHost())
-        .id(entity.getQueryId())
-        .queryTime(entity.getQueryTime().toString())
-        .lockTime(entity.getLockTime().toString())
-        .rowsSent(entity.getRowsSent())
-        .rowsExamined(entity.getRowsExamined())
-        .sql(entity.getSql())
-        .executionPlans(executionPlanEntryMapper.toDto(entity.getExecutionPlans()));
+        .time(dateTimeMapper.toOffsetDateTime(entry.getTime()))
+        .user(entry.getUser())
+        .host(entry.getHost())
+        .id(entry.getId())
+        .queryTime(entry.getQueryTime().toString())
+        .lockTime(entry.getLockTime().toString())
+        .rowsSent(entry.getRowsSent())
+        .rowsExamined(entry.getRowsExamined())
+        .sql(entry.getSql())
+        .executionPlans(executionPlanEntryMapper.toDto(entry.getExecutionPlans()));
   }
 }

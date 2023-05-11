@@ -1,22 +1,16 @@
 package dev.appkr.tools.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
 import java.io.Serializable;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
  * 참고: https://dev.mysql.com/doc/refman/8.0/en/explain-output.html
  */
-@Embeddable
-@Getter
-@Setter
+@Data
 public class ExecutionPlan implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  @Column(name = "plan_id")
   String id;
 
   /**
@@ -39,7 +33,6 @@ public class ExecutionPlan implements Serializable {
   /**
    * 실행 계획 Row가 어떤 테이블의 정보인지를 표시함; <>로 싸여진 경우 임시 테이블임
    */
-  @Column(name = "plan_table")
   String table;
 
   String partitions;
@@ -61,7 +54,6 @@ public class ExecutionPlan implements Serializable {
    * - index: 인덱스를 처음부터 끝가지 읽어어 필터링, 정렬해야 하는 경우; 데이터 파일(테이블)을 읽지는 않지만 비효율적임
    * - ALL: 풀 테이블 스캔
    */
-  @Column(name = "plan_type")
   String type;
 
   /**
@@ -72,7 +64,6 @@ public class ExecutionPlan implements Serializable {
   /**
    * 옵티마이저가 선택하여 사용한 인덱스
    */
-  @Column(name = "selected_key")
   String key;
 
   /**
@@ -87,13 +78,11 @@ public class ExecutionPlan implements Serializable {
   /**
    * type=ref 일때, 조인에 사용한 컬럼 표시
    */
-  @Column(name = "used_join_columns")
   String ref;
 
   /**
    * 옵티마이저가 비용을 산정하기 위해 검토해야하는 레코드의 수(예측 값)
    */
-  @Column(name = "estimated_rows")
   String rows;
 
   /**

@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ToolsApiDelegateImpl implements ToolsApiDelegate {
 
   static final Pattern FILTER_QUERY_SPEC = Pattern.compile("^(SELECT|UPDATE|DELETE|INSERT|REPLACE)$");
@@ -38,26 +40,23 @@ public class ToolsApiDelegateImpl implements ToolsApiDelegate {
   final SlowQueryLogAnalysisReportMapper mapper;
 
   @Override
-  public ResponseEntity<SlowQueryLogAnalysisReport> analyzeSlowQueryLog(String reportId,
-      MultipartFile logFile, Integer filterMillis, String filterQuery, String sort) {
-    final Sort sortSpec = validateAndGet(reportId, logFile, filterMillis, filterQuery, sort);
+  public ResponseEntity<SlowQueryLogAnalysisReport> analyzeSlowQueryLog(MultipartFile logFile,
+      Integer filterMillis, String filterQuery, String sort) {
     if (filterMillis == null) {
       filterMillis = 0;
     }
+    final Path path = validateAndGet(logFile);
+    final Sort sortSpec = validateAndGet(filterMillis, filterQuery, sort);
 
     AnalysisReport report;
     try {
-      final Path path = convertFrom(logFile);
-      if (reportId == null && path == null) {
-        throw new RuntimeException("빈 파일을 제출했습니다");
-      }
-
-      report = analyzer.analyze(reportId, path, filterMillis, filterQuery, sortSpec);
+      report = analyzer.analyze(path, filterMillis, filterQuery, sortSpec);
 
       if (path != null) {
         Files.deleteIfExists(path);
       }
     } catch (Exception e) {
+      log.error("Something wrong :(", e);
       throw new ConstraintViolationProblem(e.getMessage());
     }
 
@@ -66,9 +65,10 @@ public class ToolsApiDelegateImpl implements ToolsApiDelegate {
     return ResponseEntity.ok(dto);
   }
 
-  Path convertFrom(MultipartFile mFile) {
-    if (mFile == null || mFile.isEmpty()) {
-      return null;
+  Path validateAndGet(MultipartFile mFile) {
+    if (mFile == null) {
+      throw new ConstraintViolationProblem("Bad request",
+          List.of(new FieldError("AnalyzeSlowQueryLogCommand.logFile", "A file is required")));
     }
 
     Path path;
@@ -82,20 +82,15 @@ public class ToolsApiDelegateImpl implements ToolsApiDelegate {
     return path;
   }
 
-  Sort validateAndGet(String reportId, MultipartFile logFile, Integer filterMillis, String filterQuery, String sort) {
+  Sort validateAndGet(Integer filterMillis, String filterQuery, String sort) {
     final List<FieldError> errors = new ArrayList<>();
-    if (isEmpty(reportId) && (logFile == null || logFile.isEmpty())) {
-      errors.add(new FieldError("AnalyzeSlowQueryLogCommand.requiredFields",
-          "reportId, logFile 둘 중 하나는 제출해야합니다"));
-    }
-
     if (filterMillis != null && filterMillis < 0) {
-      errors.add(new FieldError("AnalyzeSlowQueryLogCommand.filterMillis", "음수는 허용하지 않습니다"));
+      errors.add(new FieldError("AnalyzeSlowQueryLogCommand.filterMillis", "The value must be positive"));
     }
 
     if (isNotEmpty(filterQuery)) {
       if (!FILTER_QUERY_SPEC.matcher(filterQuery).matches()) {
-        errors.add(new FieldError("AnalyzeSlowQueryLogCommand.filterQuery", "처리할 수 없는 필터입니다"));
+        errors.add(new FieldError("AnalyzeSlowQueryLogCommand.filterQuery", "Unprocessable filter value"));
       }
     }
 
@@ -103,7 +98,7 @@ public class ToolsApiDelegateImpl implements ToolsApiDelegate {
     if (isEmpty(sort)) {
       sortSpec = Sort.unsorted();
     } else {
-      final List<String> acceptableProperties = Stream.of(SlowQueryLog.class.getDeclaredFields())
+      final List<String> acceptableProperties = Stream.of(SlowQueryLog.LogEntry.class.getDeclaredFields())
           .map(Field::getName)
           .toList();
 
@@ -112,7 +107,7 @@ public class ToolsApiDelegateImpl implements ToolsApiDelegate {
           .map(part -> {
             final Matcher matcher = SORT_EXPRESSION.matcher(part);
             if (!matcher.matches() || !acceptableProperties.contains(matcher.group("property"))) {
-              errors.add(new FieldError("AnalyzeSlowQueryLogCommand.sort", "처리할 수 없는 값입니다"));
+              errors.add(new FieldError("AnalyzeSlowQueryLogCommand.sort", "Unprocessable sort property"));
             }
 
             Sort.Direction direction = Sort.Direction.ASC;
@@ -126,6 +121,10 @@ public class ToolsApiDelegateImpl implements ToolsApiDelegate {
           .toList();
 
       sortSpec = Sort.by(orders);
+    }
+
+    if (!errors.isEmpty()) {
+      throw new ConstraintViolationProblem("Bad request", errors);
     }
 
     return sortSpec;

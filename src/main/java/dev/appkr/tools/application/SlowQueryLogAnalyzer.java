@@ -1,5 +1,7 @@
 package dev.appkr.tools.application;
 
+import dev.appkr.tools.application.port.in.LogAnalyzer;
+import dev.appkr.tools.domain.AnalysisReport;
 import dev.appkr.tools.domain.ExplainVisitor;
 import dev.appkr.tools.domain.SlowQueryLog;
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.util.regex.Pattern;
 import lombok.Getter;
 
 @Getter
-public class SlowQueryLogAnalyzer {
+public class SlowQueryLogAnalyzer implements LogAnalyzer {
 
   // # Time: 2023-04-16T12:02:32.382948Z
   // # User@Host: root[root] @  [172.18.0.1]  Id:  3464
@@ -33,21 +35,21 @@ public class SlowQueryLogAnalyzer {
     this.visitor = visitor;
   }
 
-  public List<SlowQueryLog> analyze(Path path) throws IOException {
+  public AnalysisReport analyze(Path path) throws IOException {
     final String logContent = Files.readString(path);
     return analyze(logContent);
   }
 
-  public List<SlowQueryLog> analyze(String logContent) {
-    final List<SlowQueryLog> resultSet = new ArrayList<>();
+  public AnalysisReport analyze(String logContent) {
+    final List<SlowQueryLog> logEntries = new ArrayList<>();
 
     final Matcher entryMatcher = regex.matcher(logContent);
     while (entryMatcher.find()) {
       final SlowQueryLog logEntry = new SlowQueryLog(entryMatcher.group(1));
       logEntry.accept(visitor);
-      resultSet.add(logEntry);
+      logEntries.add(logEntry);
     }
 
-    return resultSet;
+    return new AnalysisReport(logEntries);
   }
 }

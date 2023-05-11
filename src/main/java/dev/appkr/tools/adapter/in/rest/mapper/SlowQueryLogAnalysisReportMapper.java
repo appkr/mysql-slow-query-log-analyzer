@@ -20,7 +20,6 @@ public class SlowQueryLogAnalysisReportMapper {
     }
 
     return new SlowQueryLogAnalysisReport()
-        .reportId(entity.getMd5hash())
         .summary(toDto(entity.getSummary()))
         .data(slowQueryLogEntryMapper.toDto(entity.getLogEntries()));
   }

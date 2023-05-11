@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import dev.appkr.tools.domain.Carbon;
 import dev.appkr.tools.domain.converter.*;
+import io.hypersistence.utils.hibernate.type.util.ObjectMapperSupplier;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -15,9 +16,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class JacksonConfiguration {
+public class JacksonConfiguration implements ObjectMapperSupplier {
 
   static final DateTimeFormatter LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+  @Override
+  public ObjectMapper get() {
+    return jacksonObjectMapper(javaTimeModule(), jsonNullableModule());
+  }
 
   @Bean
   public JsonNullableModule jsonNullableModule() {

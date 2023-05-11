@@ -6,11 +6,11 @@ info:
 
 servers:
   - url: http://localhost:8080
-    description: Development server
+    description: Local server
 
 paths:
 
-  /api/analyze-mysql-slow-query-log-job:
+  /tools/analyze-mysql-slow-query-log-job:
     post:
       description: Slow Query 로그를 분석합니다
       operationId: analyzeSlowQueryLog
@@ -135,11 +135,9 @@ components:
 
     AnalyzeSlowQueryLogCommand:
       type: object
+      required:
+        - logFile
       properties:
-        reportId:
-          description: |
-            이미 한번 분석했던 파일의 ID를 제출하면 캐시에서 분석 결과 조회함
-          type: string
         logFile:
           type: string
           format: binary
@@ -148,6 +146,7 @@ components:
             필터 기준(단위: 밀리초), e.g. 100 100밀리초 이상만 필터링
           type: integer
           format: int32
+          minimum: 0
           default: 0
         filterQuery:
           description: |
@@ -166,11 +165,6 @@ components:
     SlowQueryLogAnalysisReport:
       type: object
       properties:
-        reportId:
-          description: |
-            분석 ID, 다음 요청시 ID를 제출하면 캐시된 기존 분석 결과를 조회함; 캐시는 24시간 동안만 유지됨
-          type: string
-          example: f61ed7da3eea19400d912eb72d78b4ab
         summary:
           $ref: '#/components/schemas/SummaryReport'
         data:

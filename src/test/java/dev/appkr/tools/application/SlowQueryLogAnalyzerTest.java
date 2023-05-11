@@ -3,6 +3,7 @@ package dev.appkr.tools.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 
+import dev.appkr.tools.domain.AnalysisReport;
 import dev.appkr.tools.domain.ExplainVisitor;
 import dev.appkr.tools.domain.SlowQueryLog;
 import jakarta.persistence.EntityManager;
@@ -33,13 +34,13 @@ WHERE 1 = 1 AND a1.si_do_name = '대구광역시'
   AND (a1.building_name LIKE '근린생활시설1%' OR EXISTS(SELECT 1 FROM addresses a2 JOIN keywords k1 ON a2.id = k1.address_id WHERE a2.id = a1.id AND k1.name LIKE '근린생활시설1%')) 
 LIMIT 50;
         """;
-    final List<SlowQueryLog> result = sut.analyze(subject);
+    final AnalysisReport result = sut.analyze(subject);
 
     assertThat(result).isNotNull();
-    assertThat(result).isNotEmpty();
-    final SlowQueryLog firstEntry = result.iterator().next();
+    assertThat(result.getLogEntries()).isNotEmpty();
+    final SlowQueryLog firstEntry = result.getLogEntries().iterator().next();
     assertThat(firstEntry).isNotNull();
-    assertThat(firstEntry.getSql()).contains(List.of("SELECT", "FROM", "WHERE"));
+    assertThat(firstEntry.getLogEntry().getSql()).contains(List.of("SELECT", "FROM", "WHERE"));
     log.info("result: {}", result);
   }
 
