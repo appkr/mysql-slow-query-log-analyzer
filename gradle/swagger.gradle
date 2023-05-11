@@ -2,15 +2,14 @@ openApiGenerate {
     generatorName = 'spring'
     inputSpec = "${rootDir}/src/main/resources/swagger/api.yaml"
     outputDir = "${buildDir}/openapi".toString()
-    apiPackage = 'dev.appkr.tool.rest'
-    modelPackage = 'dev.appkr.tool.rest'
-    modelNameSuffix = 'Dto'
+    apiPackage = 'dev.appkr.tools.rest'
+    modelPackage = 'dev.appkr.tools.rest'
+    modelNameSuffix = ''
     apiFilesConstrainedTo = ['']
     modelFilesConstrainedTo = ['']
     supportingFilesConstrainedTo = ['ApiUtil.java']
     configOptions = [
             delegatePattern        : 'true',
-            title                  : 'address',
             useTags                : 'true',
             dateLibrary            : 'java8',
             java8                  : 'true',

@@ -1,13 +1,13 @@
 spring:
   application:
-    name: tool
+    name: tools
 
   profiles:
     active: test
 
   datasource:
     driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:local_tool;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MYSQL;DATABASE_TO_LOWER=TRUE;MODE=MYSQL
+    url: jdbc:h2:mem:local_tools;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MYSQL;DATABASE_TO_LOWER=TRUE;MODE=MYSQL
     username: sa
     password:
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
-  <logger name="dev.appkr.tool" level="INFO"/>
+  <logger name="dev.appkr.tools" level="INFO"/>
 
   <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
     <encoder class="net.logstash.logback.encoder.LogstashEncoder" />

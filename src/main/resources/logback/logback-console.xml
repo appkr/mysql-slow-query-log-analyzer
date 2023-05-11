@@ -1,5 +1,5 @@
 <included>
-  <logger name="dev.appkr.tool" level="DEBUG"/>
+  <logger name="dev.appkr.tools" level="DEBUG"/>
   <logger name="org.hibernate.SQL" level="DEBUG"/>
   <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE"/>
 

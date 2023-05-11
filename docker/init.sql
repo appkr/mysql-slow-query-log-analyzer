@@ -1,1 +1,0 @@
-CREATE DATEBASE IF NOT EXISTS `local_example`;
