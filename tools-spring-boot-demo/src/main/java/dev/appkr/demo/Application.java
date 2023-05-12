@@ -14,7 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.info.GitProperties;
 import org.springframework.context.ApplicationContext;
 
-@SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
+@SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class, scanBasePackages = {"dev.appkr.demo", "dev.appkr.tools"})
 @EnableConfigurationProperties({ApplicationProperties.class, OAuth2ClientProperties.class,
     TaskExecutionProperties.class, SentryProperties.class})
 public class Application {

@@ -1,6 +1,4 @@
 plugins {
-    id 'java'
-    id 'idea'
     id 'org.springframework.boot'
     id 'io.spring.dependency-management'
     id 'io.freefair.lombok'
@@ -12,6 +10,8 @@ plugins {
 sourceCompatibility = '17'
 
 dependencies {
+
+    api project(':tools-spring-boot-starter')
 
     /**
      * BOM, dependency management
@@ -139,11 +139,6 @@ openApiGenerate {
             useJakartaEe           : 'true'
     ]
     validateSpec = true
-}
-
-test {
-    systemProperty('spring.profiles.active', 'test')
-    systemProperty('user.timezone', 'Asia/Seoul')
 }
 
 def getGitHash = { ->

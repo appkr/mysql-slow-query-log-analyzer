@@ -1,13 +1,12 @@
 plugins {
     id 'java-library'
     id 'idea'
+    id 'com.avast.gradle.docker-compose' version "${dockerComposeVersion}"
+    id 'com.diffplug.spotless' version "${spotlessVersion}" apply false
     id 'org.springframework.boot' version "${springBootVersion}" apply false
     id 'io.spring.dependency-management' version "${springDependencyManagementVersion}" apply false
-    id 'com.avast.gradle.docker-compose' version "${dockerComposeVersion}"
-    id 'io.freefair.lombok' version "${lombokVersion}"
-    id 'io.freefair.maven-optional' version '6.6.2'
-    id 'com.diffplug.spotless' version "${spotlessVersion}"
-    id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesVersion}"
+    id 'io.freefair.lombok' version "${lombokVersion}" apply false
+    id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesVersion}" apply false
 }
 
 wrapper {
@@ -34,9 +33,34 @@ allprojects {
 }
 
 subprojects {
+    apply plugin: 'com.diffplug.spotless'
+    apply from: '../gradle/publishing.gradle'
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter'
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude module: 'junit-vintage-engine'
+            exclude module: 'junit'
+        }
+    }
+
     test {
         useJUnitPlatform()
+        systemProperty('spring.profiles.active', 'test')
+        systemProperty('user.timezone', 'Asia/Seoul')
     }
+
+    spotless {
+        encoding 'UTF-8'
+        java {
+            targetExclude("**/build/**")
+            importOrder()
+            removeUnusedImports()
+            endWithNewline()
+        }
+    }
+
+    compileJava.dependsOn('spotlessApply')
 }
 
 def dockerComposePath = System.getProperty('os.arch').equals('aarch64')
@@ -44,15 +68,3 @@ def dockerComposePath = System.getProperty('os.arch').equals('aarch64')
 dockerCompose {
     useComposeFiles = [dockerComposePath]
 }
-
-spotless {
-    encoding 'UTF-8'
-    java {
-        targetExclude("**/build/**")
-        importOrder()
-        removeUnusedImports()
-        endWithNewline()
-    }
-}
-
-compileJava.dependsOn('spotlessApply')

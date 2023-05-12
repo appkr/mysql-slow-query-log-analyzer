@@ -1,18 +1,18 @@
 plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
     id 'io.freefair.lombok'
 }
 
-apply from: '../gradle/publishing.gradle'
-
-def loggers = [
-        'org.slf4j:slf4j-api:2.0.7',
-        'org.slf4j:log4j-over-slf4j:2.0.7',
-        'ch.qos.logback:logback-core:1.4.7',
-        'ch.qos.logback:logback-classic:1.4.7'
-]
-
 dependencies {
-    api loggers
-    testImplementation loggers
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-hibernate5-jakarta'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'io.hypersistence:hypersistence-utils-hibernate-60:3.3.2'
+}
+
+bootJar {
+    enabled = false
 }

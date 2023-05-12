@@ -1,11 +1,11 @@
 package dev.appkr.demo.config;
 
-import dev.appkr.demo.application.FilterableLogAnalyzer;
-import dev.appkr.demo.application.PersistableLogAnalyzer;
-import dev.appkr.demo.application.SlowQueryLogAnalyzer;
-import dev.appkr.demo.application.port.in.LogAnalyzer;
-import dev.appkr.demo.domain.ExplainVisitor;
-import dev.appkr.demo.application.port.out.AnalysisReportJpaRepository;
+import dev.appkr.demo.adapter.out.AnalysisReportJpaRepository;
+import dev.appkr.tools.FilterableLogAnalyzer;
+import dev.appkr.tools.LogAnalyzer;
+import dev.appkr.tools.PersistableLogAnalyzer;
+import dev.appkr.tools.SlowQueryLogAnalyzer;
+import dev.appkr.tools.model.ExplainVisitor;
 import jakarta.persistence.EntityManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

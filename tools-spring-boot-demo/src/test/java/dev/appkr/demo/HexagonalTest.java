@@ -20,7 +20,7 @@ public class HexagonalTest {
         .resideInAnyPackage("dev.appkr.demo.domain..")
         .should()
         .dependOnClassesThat()
-        .resideInAnyPackage("dev.appkr.demo.application..", "dev.appkr.demo.adapter..")
+        .resideInAnyPackage("dev.appkr.demo.port..", "dev.appkr.demo.adapter..")
         .because("Domain should not depend on any other packages")
         .check(importedClasses);
   }
@@ -29,11 +29,11 @@ public class HexagonalTest {
   public void applicationShouldNotDependOnAdapter() {
     noClasses()
         .that()
-        .resideInAnyPackage("dev.appkr.demo.application..")
+        .resideInAnyPackage("dev.appkr.demo.port..")
         .should()
         .dependOnClassesThat()
         .resideInAnyPackage("dev.appkr.demo.adapter..")
-        .because("Application should not depend on any adapter packages")
+        .because("Port should not depend on any adapter packages")
         .check(importedClasses);
   }
 }

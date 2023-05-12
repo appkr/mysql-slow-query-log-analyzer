@@ -3,20 +3,18 @@ package dev.appkr.demo.config;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.*;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import dev.appkr.demo.domain.Carbon;
-import dev.appkr.demo.domain.converter.CarbonJsonDeserializer;
-import dev.appkr.demo.domain.converter.CarbonJsonSerializer;
 import io.hypersistence.utils.hibernate.type.util.ObjectMapperSupplier;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import org.openapitools.jackson.nullable.JsonNullableModule;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnMissingBean(ObjectMapper.class)
 public class JacksonConfiguration implements ObjectMapperSupplier {
 
   static final DateTimeFormatter LOCAL_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -42,12 +40,8 @@ public class JacksonConfiguration implements ObjectMapperSupplier {
 
   @Bean
   public ObjectMapper jacksonObjectMapper(JavaTimeModule javaTimeModule, JsonNullableModule jsonNullableModule) {
-    final SimpleModule simpleModule = new SimpleModule();
-    simpleModule.addSerializer(Carbon.class, new CarbonJsonSerializer());
-    simpleModule.addDeserializer(Carbon.class, new CarbonJsonDeserializer());
-
     final ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModules(javaTimeModule, jsonNullableModule, simpleModule);
+    mapper.registerModules(javaTimeModule, jsonNullableModule);
 
     mapper.disable(
         DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
