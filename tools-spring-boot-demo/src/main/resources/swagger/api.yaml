@@ -1,0 +1,347 @@
+openapi: '3.0.3'
+
+info:
+  title: 'demo'
+  version: 0.0.1
+
+servers:
+  - url: http://localhost:8080
+    description: Local server
+
+paths:
+
+  /demo/analyze-mysql-slow-query-log-job:
+    post:
+      description: Slow Query 로그를 분석합니다
+      operationId: analyzeSlowQueryLog
+      tags:
+        - Demo
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AnalyzeSlowQueryLogCommand'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlowQueryLogAnalysisReport'
+        '400':
+          $ref: 'api.yaml#/components/responses/BadRequest'
+        '401':
+          $ref: 'api.yaml#/components/responses/Unauthorized'
+        '403':
+          $ref: 'api.yaml#/components/responses/Forbidden'
+        '500':
+          $ref: 'api.yaml#/components/responses/ServerError'
+
+components:
+  schemas:
+
+    #----------------------------------------
+    # API fields
+    #----------------------------------------
+
+    LongId:
+      type: integer
+      format: int64
+      example: 1
+
+    DateTime:
+      type: string
+      format: date-time
+      example: "2018-12-01T10:00:00Z"
+
+    String:
+      type: string
+      example: "foo"
+
+    UUID:
+      type: string
+      format: uuid
+      example: c9106593-2d6c-40eb-8504-66b0ef41ad2d
+
+    #----------------------------------------
+    # Common Model
+    #----------------------------------------
+
+    LongArray:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/LongId'
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          example: /demo/constraint-violation
+        title:
+          type: string
+          example: 제출한 요청이 유효하지 않습니다
+        detail:
+          type: string
+        fieldErrors:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          $ref: '#/components/schemas/ErrorCode'
+
+    ErrorCode:
+      type: string
+      example:
+        - NotNull
+        - Size
+
+    Page:
+      type: object
+      properties:
+        size:
+          type: integer
+          format: int32
+          default: 20
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 100
+        totalPages:
+          type: integer
+          format: int32
+          example: 5
+        number:
+          type: integer
+          format: int32
+          default: 1
+          example: 1
+
+    #----------------------------------------
+    # API Model
+    #----------------------------------------
+
+    AnalyzeSlowQueryLogCommand:
+      type: object
+      required:
+        - logFile
+      properties:
+        logFile:
+          type: string
+          format: binary
+        filterMillis:
+          description: |
+            필터 기준(단위: 밀리초), e.g. 100 100밀리초 이상만 필터링
+          type: integer
+          format: int32
+          minimum: 0
+          default: 0
+        filterQuery:
+          description: |
+            필터할 쿼리 타입: SELECT, UPDATE, DELETE, INSERT, REPLACE
+          type: string
+          pattern: '(SELECT|UPDATE|DELETE|INSERT|REPLACE)'
+        sort:
+          description: |
+            - `{property}`:`{direction}`,`{property}`:`{direction}` 형식으로 제출 (direction 생략 가능, 기본값: 오름차순)
+            - property: `time`, `queryTime`, `lockTime`, `rowsSent`, `rowExamined` 제출 가능 (대소문자 구분)
+            - direction: `asc`, `desc` (소문자만 허용)
+          pattern: '(?<property>[\p{L}][\p{L}\p{Nd}]*)(?::)?(?<direction>asc|desc)?'
+          type: string
+          example: queryTime:desc,rowExamined:desc
+
+    SlowQueryLogAnalysisReport:
+      type: object
+      properties:
+        summary:
+          $ref: '#/components/schemas/SummaryReport'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlowQueryLogEntry'
+
+    SummaryReport:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          example: 47
+        min:
+          type: string
+          example: PT1.009S
+        average:
+          type: string
+          example: PT6.674S
+        max:
+          type: string
+          example: PT35.707S
+
+    SlowQueryLogEntry:
+      type: object
+      properties:
+        time:
+          type: string
+          format: date-time
+          example: 2023-01-01T09:00:00+09:00
+        user:
+          type: string
+          example: root
+        host:
+          type: string
+          example: 172.20.0.1
+        id:
+          type: string
+          example: 48
+        queryTime:
+          type: string
+          example: PT35.707S
+        lockTime:
+          type: string
+          example: PT0S
+        rowsSent:
+          type: integer
+          format: int32
+          example: 1
+        rowsExamined:
+          type: integer
+          format: int32
+          example: 143351
+        sql:
+          type: string
+          example: SELECT a1.id FROM table AS a1 ...;
+        executionPlans:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExecutionPlanEntry'
+
+    ExecutionPlanEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 1
+        selectType:
+          type: string
+          example: PRIMARY
+        table:
+          type: string
+          example: a1
+        partitions:
+          type: string
+        type:
+          type: string
+          example: ref
+        possibleKeys:
+          type: string
+          example: IDX_ADMIN_REGION_GROUP
+        key:
+          type: string
+          example: IDX_ADMIN_REGION_GROUP
+        keyLen:
+          type: string
+          example: 324
+        ref:
+          type: string
+          example: const,const
+        rows:
+          type: string
+          example: 314302
+        filtered:
+          type: string
+          example: 3.8
+        extra:
+          type: string
+          example: Using where
+
+  parameters:
+
+    PageParam:
+      in: query
+      name: page
+      schema:
+        type: integer
+        format: int32
+        default: 1
+
+    SizeParam:
+      in: query
+      name: size
+      schema:
+        type: integer
+        format: int32
+        default: 10
+
+  responses:
+
+    Created:
+      description: Created
+
+    Accepted:
+      description: Accepted
+
+    NoContent:
+      description: No Content
+
+    EmptyContent:
+      description: No Content
+      content:
+        application/json: { }
+
+    BadRequest:
+      description: Bad Request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    NotFound:
+      description: Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    Conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+    ServerError:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+
+  securitySchemes: {}
+
+security: []

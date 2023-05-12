@@ -1,0 +1,18 @@
+plugins {
+    id 'io.freefair.lombok'
+}
+
+apply from: '../gradle/publishing.gradle'
+
+def loggers = [
+        'org.slf4j:slf4j-api:2.0.7',
+        'org.slf4j:log4j-over-slf4j:2.0.7',
+        'ch.qos.logback:logback-core:1.4.7',
+        'ch.qos.logback:logback-classic:1.4.7'
+]
+
+dependencies {
+    api loggers
+    testImplementation loggers
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+}

@@ -1,0 +1,31 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'io.freefair.maven-optional'
+}
+
+apply from: '../gradle/publishing.gradle'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+dependencies {
+    api project(':core')
+    optional 'org.springframework.boot:spring-boot-starter'
+    optional 'org.springframework.boot:spring-boot-starter-actuator'
+
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude module: 'junit-vintage-engine'
+        exclude module: 'junit'
+    }
+}
+
+bootJar {
+    enabled = false
+}
