@@ -1,6 +1,6 @@
 rootProject.name = 'tools'
 
-include 'core'
+include 'tools-core'
 include 'tools-spring-boot-autoconfigure'
 include 'tools-spring-boot-starter'
 include 'tools-spring-boot-demo'

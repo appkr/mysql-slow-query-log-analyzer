@@ -123,8 +123,8 @@ openApiGenerate {
     generatorName = 'spring'
     inputSpec = "${projectDir}/src/main/resources/swagger/api.yaml"
     outputDir = "${buildDir}/openapi".toString()
-    apiPackage = 'dev.appkr.demo.rest'
-    modelPackage = 'dev.appkr.demo.rest'
+    apiPackage = 'dev.appkr.tools.demo.rest'
+    modelPackage = 'dev.appkr.tools.demo.rest'
     modelNameSuffix = ''
     apiFilesConstrainedTo = ['']
     modelFilesConstrainedTo = ['']

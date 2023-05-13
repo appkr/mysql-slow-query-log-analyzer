@@ -10,10 +10,10 @@ configurations {
 }
 
 dependencies {
-    api project(':core')
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    api project(':tools-core')
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.springframework.boot:spring-boot-autoconfigure-processor'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 }
 
 bootJar {
