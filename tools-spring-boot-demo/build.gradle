@@ -141,28 +141,14 @@ openApiGenerate {
     validateSpec = true
 }
 
-def getGitHash = { ->
-    def gitPropertyFile = file("${buildDir}/resources/main/git.properties")
-    // if statement used to WORKAROUND in gradle build: A problem occurred evaluating script.
-    //> .../build/resources/main/git.properties (No such file or directory)
-    if (gitPropertyFile.exists()) {
-        def props = new Properties()
-        gitPropertyFile.withInputStream { props.load(it) }
-        return props.getProperty('git.commit.id.abbrev', 'unknown')
-    }
-
-    return 'unknown'
-}
-
 jib {
     from {
         image = 'amazoncorretto:17-alpine-jdk'
     }
 
-
     to {
         image = "${project.name}"
-        tags = ['latest', "${project.version}".toString(), getGitHash()]
+        tags = ['latest', "${project.version}".toString(), buildRevision]
     }
 
     // If set to packaged, puts the JAR artifact built by the Gradle Java plugin into the final image.

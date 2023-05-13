@@ -3,7 +3,7 @@ plugins {
     id 'io.spring.dependency-management'
 }
 
-//apply from: '../gradle/publishing.gradle'
+apply from: '../gradle/deploy.gradle'
 
 configurations {
     compileOnly {

@@ -1,27 +1,51 @@
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+
 plugins {
+    id 'java'
     id 'java-library'
-    id 'idea'
     id 'com.avast.gradle.docker-compose' version "${dockerComposeVersion}"
+    id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesVersion}"
     id 'com.diffplug.spotless' version "${spotlessVersion}" apply false
     id 'org.springframework.boot' version "${springBootVersion}" apply false
     id 'io.spring.dependency-management' version "${springDependencyManagementVersion}" apply false
     id 'io.freefair.lombok' version "${lombokVersion}" apply false
-    id 'com.gorylenko.gradle-git-properties' version "${gitPropertiesVersion}" apply false
 }
 
 wrapper {
     gradleVersion = '7.6.1'
 }
 
+def buildTimeAndDate = OffsetDateTime.now()
+def getGitHash = { ->
+    def gitPropertyFile = file("${buildDir}/resources/main/git.properties")
+    // if statement used to WORKAROUND in gradle build: A problem occurred evaluating script.
+    //> .../build/resources/main/git.properties (No such file or directory)
+    if (gitPropertyFile.exists()) {
+        def props = new Properties()
+        gitPropertyFile.withInputStream { props.load(it) }
+        return props.getProperty('git.commit.id.abbrev', 'unknown')
+    }
+
+    return 'unknown'
+}
+
 allprojects {
     apply plugin: 'java-library'
     apply plugin: 'idea'
+    apply plugin: 'eclipse'
 
-    group = 'dev.appkr.tools'
+    group = 'dev.appkr'
     version = project.version
 
     repositories {
         mavenCentral()
+    }
+
+    buildscript {
+        repositories {
+            maven { url 'https://plugins.gradle.org/m2/' }
+        }
     }
 
     idea {
@@ -30,10 +54,23 @@ allprojects {
             downloadSources = true
         }
     }
+
+    eclipse {
+        classpath {
+            downloadJavadoc = true
+            downloadSources = true
+        }
+    }
 }
 
 subprojects {
     apply plugin: 'com.diffplug.spotless'
+
+    ext {
+        buildDate = DateTimeFormatter.ISO_LOCAL_DATE.format(buildTimeAndDate)
+        buildTime = DateTimeFormatter.ofPattern('HH:mm:ss.SSSZ').format(buildTimeAndDate)
+        buildRevision = getGitHash()
+    }
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter'
@@ -49,9 +86,24 @@ subprojects {
         systemProperty('user.timezone', 'Asia/Seoul')
     }
 
+    // Generate MANIFEST.MF
+    jar {
+        manifest {
+            attributes(
+                    'Created-By': "${System.properties['java.version']} (${System.properties['java.vendor']} ${System.properties['java.vm.version']})".toString(),
+                    'Build-Date': buildDate,
+                    'Build-Time': buildTime,
+                    'Built-OS': "${System.properties['os.name']}",
+                    'Build-Revision': buildRevision,
+                    'License': 'MIT'
+            )
+        }
+    }
+
     spotless {
         encoding 'UTF-8'
         java {
+            target('src/main/**/*.java', 'src/test/**/*.java')
             targetExclude("**/build/**")
             importOrder()
             removeUnusedImports()

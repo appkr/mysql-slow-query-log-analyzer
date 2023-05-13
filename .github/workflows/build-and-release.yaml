@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: build
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -18,10 +18,12 @@ jobs:
           distribution: 'corretto'
           java-version: '17'
 
-      - name: java build
-        run: ./gradlew clean build
+      - name: Build with Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: -x publish
 
-      - name: upload jar
+      - name: Upload jar
         uses: actions/upload-artifact@v3
         with:
           name: jar
@@ -31,19 +33,33 @@ jobs:
             tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar
           retention-days: 1
 
-  # release
-  # https://electricui.com/blog/github-actions
+        # TODO @appkr: gpg: signing failed: No secret key
+        # Reference: https://central.sonatype.org/publish/
+        # Reference: https://maciejwalkowiak.com/blog/guide-java-publish-to-maven-central/
+        # Reference: https://docs.gradle.org/current/userguide/signing_plugin.html
+        # SNAPSHOT repository: https://s01.oss.sonatype.org/content/repositories/snapshots/dev/appkr/tools/
+#      - name: Publish to Maven Central
+#        uses: gradle/gradle-build-action@v2
+#        with:
+#          arguments: publish -x check -Psigning.gnupg.executable=gpg -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_NAME }} -Psigning.gnupg.passphrase=${{ secrets.GPG_PASSPHRASE }}
+#        env:
+#          OSSRH_USER: ${{ secrets.OSSRH_USER }}
+#          OSSRH_PASS: ${{ secrets.OSSRH_PASS }}
+#          GPG_KEY_NAME: ${{ secrets.GPG_KEY_NAME }}
+#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+  # Reference: https://electricui.com/blog/github-actions
   release:
-    name: create prerelease
+    name: Create prerelease
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
 
-      - name: display fetched artifacts
-        run: ls -alR jar
+      - name: Display fetched artifacts
+        run: ls -alR
 
-      - name: create a github release
+      - name: Create a github release
         uses: marvinpinto/action-automatic-releases@latest
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,4 +1,4 @@
-//apply from: '../gradle/publishing.gradle'
+apply from: '../gradle/deploy.gradle'
 
 dependencies {
     api project(':tools-spring-boot-autoconfigure')
