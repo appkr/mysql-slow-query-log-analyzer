@@ -12,7 +12,7 @@ paths:
 
   /demo/analyze-mysql-slow-query-log-job:
     post:
-      description: Slow Query 로그를 분석합니다
+      description: Analyzing given MySQL slow query log
       operationId: analyzeSlowQueryLog
       tags:
         - Demo
@@ -84,7 +84,7 @@ components:
           example: /demo/constraint-violation
         title:
           type: string
-          example: 제출한 요청이 유효하지 않습니다
+          example: Bad request
         detail:
           type: string
         fieldErrors:
@@ -143,21 +143,21 @@ components:
           format: binary
         filterMillis:
           description: |
-            필터 기준(단위: 밀리초), e.g. 100 100밀리초 이상만 필터링
+            Query execution duration to filter(unit: millisec)
           type: integer
           format: int32
           minimum: 0
           default: 0
         filterQuery:
           description: |
-            필터할 쿼리 타입: SELECT, UPDATE, DELETE, INSERT, REPLACE
+            Query type to filter: SELECT, UPDATE, DELETE, INSERT, REPLACE
           type: string
           pattern: '(SELECT|UPDATE|DELETE|INSERT|REPLACE)'
         sort:
           description: |
-            - `{property}`:`{direction}`,`{property}`:`{direction}` 형식으로 제출 (direction 생략 가능, 기본값: 오름차순)
-            - property: `time`, `queryTime`, `lockTime`, `rowsSent`, `rowExamined` 제출 가능 (대소문자 구분)
-            - direction: `asc`, `desc` (소문자만 허용)
+            - Format: `{property}`:`{direction}`,`{property}`:`{direction}`, ... (Default direction: asc)
+            - Acceptable properties: `time`, `queryTime`, `lockTime`, `rowsSent`, `rowExamined` (Case sensitive)
+            - Acceptable direction: `asc`, `desc` (All lower)
           pattern: '(?<property>[\p{L}][\p{L}\p{Nd}]*)(?::)?(?<direction>asc|desc)?'
           type: string
           example: queryTime:desc,rowExamined:desc

@@ -68,10 +68,10 @@ dependencies {
      * Microservice patterns
      */
 
-    // 헬스체크 패턴
+    // Health check pattern
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
-    // 로깅 및 추적 패턴
+    // Loging and tracing pattern
     // micrometer bug workaround: Cannot invoke "io.micrometer.tracing.CurrentTraceContext$Scope.close()" because the return value of "io.micrometer.tracing.handler.TracingObservationHandler$TracingContext.getScope()" is null
     // https://github.com/micrometer-metrics/tracing/issues/179
     // https://github.com/micrometer-metrics/micrometer/issues/1910#issuecomment-1462711578

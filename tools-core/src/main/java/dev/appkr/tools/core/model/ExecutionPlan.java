@@ -4,7 +4,7 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * 참고: https://dev.mysql.com/doc/refman/8.0/en/explain-output.html
+ * Reference: https://dev.mysql.com/doc/refman/8.0/en/explain-output.html
  */
 @Data
 public class ExecutionPlan implements Serializable {

@@ -1,3 +1,5 @@
+apply from: '../gradle/publishing.gradle'
+
 dependencies {
     api project(':tools-spring-boot-autoconfigure')
 }

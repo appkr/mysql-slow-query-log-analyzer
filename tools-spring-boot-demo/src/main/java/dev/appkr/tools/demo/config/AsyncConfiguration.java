@@ -36,7 +36,6 @@ public class AsyncConfiguration {
     executor.setTaskDecorator(taskDecorator());
     executor.initialize();
 
-    // 참고: SecurityContext를 전달하기 위한 랩퍼
     return executor;
   }
 

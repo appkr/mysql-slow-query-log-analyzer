@@ -33,7 +33,7 @@ public class SlowQueryLog implements Serializable {
       .compile("^# Query_time:\\s*(?<queryTime>[0-9.]+)\\s*Lock_time:\\s*(?<lockTime>[0-9.]+)\\s*" +
                "Rows_sent:\\s*(?<rowsSent>[0-9]+)\\s*Rows_examined:\\s*(?<rowsExamined>[0-9]+)$");
 
-  // [], # 제외한 키보드에 있는 모든 특수 문자, 문자, 숫자
+  // [], All character from any language, number, special character excluding sharp(#)
   static final Pattern SQL_LINE = Pattern
       .compile("(?<sql>^(SELECT|UPDATE|DELETE|INSERT|REPLACE)\\s*[\\p{L}\\p{Nd}`~!@$%^&*()_\\-=+\\|{}:;'\\\"<>?,./\\s\\n]+)$",
           Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
@@ -69,7 +69,7 @@ public class SlowQueryLog implements Serializable {
               this.setRowsExamined(parseIntegerFrom(statLineMatcher.group("rowsExamined").trim()));
             }
           } catch (Exception e) {
-            log.warn("로그 분석 실패: log={}", aLogParagraph);
+            log.warn("Failed to analyze: log={}", aLogParagraph);
           }
         });
 
@@ -87,7 +87,7 @@ public class SlowQueryLog implements Serializable {
         this.setSql(sanitizedSql);
       }
     } catch (Exception e) {
-      log.warn("로그 분석 실패: log={}", aLogParagraph);
+      log.warn("Failed to analyze: log={}", aLogParagraph);
     }
   }
 

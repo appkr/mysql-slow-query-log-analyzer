@@ -73,7 +73,7 @@ public class AnalysisReport implements Serializable {
             case "lockTime" -> Comparator.comparing(SlowQueryLog::getLockTime);
             case "rowsSent" -> Comparator.comparing(SlowQueryLog::getRowsSent);
             case "rowsExamined" -> Comparator.comparing(SlowQueryLog::getRowsExamined);
-            default -> throw new IllegalArgumentException("정렬할 수 없는 property입니다: property=" + property);
+            default -> throw new IllegalArgumentException("Unprocessable property given: property=" + property);
           };
 
           final Sort.Direction direction = order.getDirection();

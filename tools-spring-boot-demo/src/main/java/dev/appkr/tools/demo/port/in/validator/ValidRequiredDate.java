@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidRequiredDate {
 
-  String message() default "yyyy-MM-dd 형식으로 제출바랍니다";
+  String message() default "Should follow yyyy-MM-dd formatting";
 
   Class<?>[] groups() default {};
 

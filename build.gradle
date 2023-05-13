@@ -34,7 +34,6 @@ allprojects {
 
 subprojects {
     apply plugin: 'com.diffplug.spotless'
-    apply from: '../gradle/publishing.gradle'
 
     dependencies {
         implementation 'org.springframework.boot:spring-boot-starter'
