@@ -1,0 +1,56 @@
+name: Build and Prerelease
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+
+      - name: java build
+        run: ./gradlew clean build
+
+      - name: upload jar
+        uses: actions/upload-artifact@v3
+        with:
+          name: jar
+          path: |
+            tools-core/build/libs/tools-core-*.jar
+            tools-spring-boot-autoconfigure/build/libs/tools-spring-boot-autoconfigure-*.jar
+            tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar
+          retention-days: 1
+
+  # release
+  # https://electricui.com/blog/github-actions
+  release:
+    name: create prerelease
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v3
+
+      - name: display fetched artifacts
+        run: ls -alR jar
+
+      - name: create a github release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: Development Build
+          files: |
+            jar/tools-core/build/libs/tools-core-*.jar
+            jar/tools-spring-boot-autoconfigure/build/libs/tools-spring-boot-autoconfigure-*.jar
+            jar/tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar

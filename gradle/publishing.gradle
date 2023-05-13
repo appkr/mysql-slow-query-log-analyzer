@@ -20,6 +20,7 @@ publishing {
             }
         }
     }
+
     repositories {
         maven {
             def releasesRepoUrl = 'https://nexus.mm.meshkorea.net/repository/maven-releases/'

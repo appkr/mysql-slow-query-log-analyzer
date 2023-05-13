@@ -4,7 +4,7 @@ plugins {
     id 'io.freefair.lombok'
 }
 
-apply from: '../gradle/publishing.gradle'
+//apply from: '../gradle/publishing.gradle'
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
