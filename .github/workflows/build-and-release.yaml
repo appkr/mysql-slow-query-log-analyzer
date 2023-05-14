@@ -28,8 +28,6 @@ jobs:
         with:
           name: jar
           path: |
-            tools-core/build/libs/tools-core-*.jar
-            tools-spring-boot-autoconfigure/build/libs/tools-spring-boot-autoconfigure-*.jar
             tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar
           retention-days: 1
 
@@ -57,7 +55,7 @@ jobs:
       - uses: actions/download-artifact@v3
 
       - name: Display fetched artifacts
-        run: ls -alR
+        run: ls -alR .
 
       - name: Create a github release
         uses: marvinpinto/action-automatic-releases@latest
@@ -67,6 +65,4 @@ jobs:
           prerelease: true
           title: Development Build
           files: |
-            jar/tools-core/build/libs/tools-core-*.jar
-            jar/tools-spring-boot-autoconfigure/build/libs/tools-spring-boot-autoconfigure-*.jar
             jar/tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar
