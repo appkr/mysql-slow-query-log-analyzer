@@ -11,7 +11,8 @@ sourceCompatibility = '17'
 
 dependencies {
 
-    api project(':tools-spring-boot-starter')
+//    api project(':tools-spring-boot-starter')
+    implementation 'dev.appkr:tools-spring-boot-starter:0.0.1-RELEASE'
 
     /**
      * BOM, dependency management

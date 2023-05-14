@@ -72,17 +72,11 @@ curl -XPOST http://localhost:8080/demo/analyze-mysql-slow-query-log-job \
 
 ## Install
 
-Download the library.
-
-```shell
-VERSION=0.0.1-RELEASE
-curl https://github.com/appkr/mysql-slow-query-log-analyzer/releases/download/$VERSION/tools-spring-boot-starter-$VERSION-plain.jar -o /path/to/libs
-```
-
 Add library as a project dependency.
 
 ```groovy
-implementation files('path/to/libs/tools-spring-boot-starter-0.0.1-RELEASE-plain.jar')
+// build.gradle
+implementation 'dev.appkr:tools-spring-boot-starter:0.0.1-RELEASE'
 ```
 
 Integrate the feature to your service.
