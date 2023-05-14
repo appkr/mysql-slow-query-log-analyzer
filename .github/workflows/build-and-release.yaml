@@ -18,17 +18,15 @@ jobs:
           distribution: 'corretto'
           java-version: '17'
 
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: -x publish
+      - name: Build with gradle
+        run: ./gradlew clean build
 
       - name: Upload jar
         uses: actions/upload-artifact@v3
         with:
           name: jar
           path: |
-            tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar
+            tools-spring-boot-starter/build/libs/*.jar
           retention-days: 1
 
         # TODO @appkr: gpg: signing failed: No secret key
@@ -65,4 +63,4 @@ jobs:
           prerelease: true
           title: Development Build
           files: |
-            jar/tools-spring-boot-starter/build/libs/tools-spring-boot-starter-*.jar
+            jar/*.jar

@@ -4,7 +4,7 @@ plugins {
     id 'io.freefair.lombok'
 }
 
-apply from: '../gradle/deploy.gradle'
+//apply from: '../gradle/deploy.gradle'
 
 configurations {
     compileOnly {
