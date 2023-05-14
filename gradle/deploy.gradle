@@ -1,0 +1,79 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+ext {
+    isReleaseVersion = !(project.version =~ /-SNAPSHOT$/)
+    isNeedSign = project.hasProperty('signing.gnupg.keyName')
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier.set('sources')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+
+            from components.java
+            artifact sourcesJar
+
+            pom {
+                name = 'MySQL Slow Query Log Analyzer'
+                description = 'MySQL Slow Query Log Analyzer'
+                url = 'https://github.com/appkr/mysql-slow-query-log-analyzer'
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'appkr'
+                        name = 'Juwon Kim'
+                        email = 'juwonkim@me.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:git://github.com/appkr/mysql-slow-query-log-analyzer.git'
+                    developerConnection = 'scm:git:ssh@github.com:appkr/mysql-slow-query-log-analyzer.git'
+                    url = 'https://github.com/appkr/mysql-slow-query-log-analyzer'
+                }
+            }
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            credentials {
+                username System.getenv('OSSRH_USER')
+                password System.getenv('OSSRH_PASS')
+            }
+            if (project.ext.isReleaseVersion) {
+                url 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+            } else {
+                url 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
+            }
+        }
+    }
+
+    tasks.withType(Sign) {
+        onlyIf { project.ext.isNeedSign }
+    }
+
+    signing {
+        useGpgCmd()
+        sign publishing.publications.mavenJava
+    }
+}
