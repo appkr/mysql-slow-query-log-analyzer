@@ -4,11 +4,11 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Objects;
 
-public class ExplainVisitor {
+public class ExecutionPlanVisitor {
 
   final EntityManager em;
 
-  public ExplainVisitor(EntityManager em) {
+  public ExecutionPlanVisitor(EntityManager em) {
     this.em = em;
   }
 

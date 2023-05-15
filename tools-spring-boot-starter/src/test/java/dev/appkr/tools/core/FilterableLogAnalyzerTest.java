@@ -1,8 +1,8 @@
 package dev.appkr.tools.core;
 
-import dev.appkr.tools.core.model.AnalysisReport;
-import dev.appkr.tools.core.model.Fixtures;
-import dev.appkr.tools.core.model.SlowQueryLog;
+import static org.mockito.ArgumentMatchers.any;
+
+import dev.appkr.tools.core.model.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.data.domain.Sort;
 
 class FilterableLogAnalyzerTest {
 
@@ -20,19 +19,21 @@ class FilterableLogAnalyzerTest {
 
   @Test
   void noFilter() throws IOException {
-    final AnalysisReport filteredReport = sut.analyze(PATH, null, null, null);
+    final AnalysisReport filteredReport = sut.analyze(PATH, null);
     Assertions.assertThat(filteredReport.getLogEntries().size()).isEqualTo(2);
   }
 
   @Test
   void filter1KMillis_thenExpectOneEntry() throws IOException {
-    final AnalysisReport filteredReport = sut.analyze(PATH, 1000, null, null);
+    final LogFilter filter = LogFilter.builder().slowerThanMillis(1_000).build();
+    final AnalysisReport filteredReport = sut.analyze(PATH, filter);
     Assertions.assertThat(filteredReport.getLogEntries().size()).isEqualTo(1);
   }
 
   @Test
   void sortByQueryTime_thenExpectFirstItemQueryIdIs2() throws IOException {
-    final AnalysisReport filteredReport = sut.analyze(PATH, null, null, Sort.by("queryTime"));
+    final LogFilter filter = LogFilter.builder().sort("queryTime").build();
+    final AnalysisReport filteredReport = sut.analyze(PATH, filter);
     Assertions.assertThat(filteredReport.getLogEntries().get(0).getId()).isEqualTo("2");
   }
 
@@ -40,8 +41,13 @@ class FilterableLogAnalyzerTest {
   void setup() {
     final SlowQueryLogAnalyzer innerAnalyzer = Mockito.mock(SlowQueryLogAnalyzer.class);
     final AnalysisReportRepository mockRepository = Mockito.mock(AnalysisReportRepository.class);
+    final FingerprintVisitor mockVisitor = Mockito.mock(FingerprintVisitor.class);
 
-    sut = new FilterableLogAnalyzer(new MockAnalyzer(innerAnalyzer, mockRepository));
+    Mockito
+        .when(mockVisitor.visit(any(SlowQueryLog.class)))
+        .thenReturn(Fixtures.aTuple1());
+
+    sut = new FilterableLogAnalyzer(new MockAnalyzer(innerAnalyzer, mockRepository), mockVisitor);
   }
 
   static class MockAnalyzer extends CacheableLogAnalyzer {

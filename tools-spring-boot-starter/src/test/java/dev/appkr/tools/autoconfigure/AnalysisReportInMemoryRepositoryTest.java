@@ -35,6 +35,6 @@ class AnalysisReportInMemoryRepositoryTest {
   void setup() {
     sut = new AnalysisReportInMemoryRepository();
     final List<SlowQueryLog> logEntries = List.of(new SlowQueryLog(Fixtures.aLogString1()), new SlowQueryLog(Fixtures.aLogString2()));
-    sut.save(new AnalysisReport(ID, logEntries));
+    sut.save(new AnalysisReport(ID, null, logEntries));
   }
 }

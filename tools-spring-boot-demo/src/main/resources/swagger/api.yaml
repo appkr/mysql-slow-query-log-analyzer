@@ -165,12 +165,37 @@ components:
     SlowQueryLogAnalysisReport:
       type: object
       properties:
+        serverInfo:
+          $ref: '#/components/schemas/ServerInfo'
         summary:
           $ref: '#/components/schemas/SummaryReport'
         data:
           type: array
           items:
             $ref: '#/components/schemas/SlowQueryLogEntry'
+        queryStats:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryStat'
+
+    ServerInfo:
+      type: object
+      properties:
+        binary:
+          type: string
+          example: /usr/sbin/mysqld
+        version:
+          type: string
+          example: 8.0.33
+        versionDescription:
+          type: string
+          example: MySQL Community Server - GPL
+        tcpPort:
+          type: string
+          example: 3306
+        unixSocket:
+          type: string
+          example: /var/run/mysqld/mysqld.sock
 
     SummaryReport:
       type: object
@@ -192,6 +217,8 @@ components:
     SlowQueryLogEntry:
       type: object
       properties:
+        key:
+          type: string
         time:
           type: string
           format: date-time
@@ -265,6 +292,39 @@ components:
         extra:
           type: string
           example: Using where
+
+    QueryStat:
+      type: object
+      properties:
+        key:
+          type: string
+        fingerprint:
+          type: string
+        calls:
+          type: integer
+          format: int32
+        cumQueryTime:
+          type: string
+        cumLockTime:
+          type: string
+        cumRowsExamined:
+          type: integer
+          format: int32
+        cumRowsSent:
+          type: integer
+          format: int32
+        minTime:
+          type: string
+        maxTime:
+          type: string
+        avgTime:
+          type: string
+        p50Time:
+          type: string
+        p95Time:
+          type: string
+        stddevTime:
+          type: string
 
   parameters:
 

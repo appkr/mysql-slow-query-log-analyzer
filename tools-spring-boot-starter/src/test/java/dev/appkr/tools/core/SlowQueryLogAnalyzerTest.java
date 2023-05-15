@@ -1,16 +1,18 @@
 package dev.appkr.tools.core;
 
 import dev.appkr.tools.core.model.AnalysisReport;
-import dev.appkr.tools.core.model.ExplainVisitor;
+import dev.appkr.tools.core.model.ExecutionPlanVisitor;
 import dev.appkr.tools.core.model.Fixtures;
 import dev.appkr.tools.core.model.SlowQueryLog;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import java.lang.reflect.Method;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.ReflectionUtils;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 
@@ -21,7 +23,8 @@ class SlowQueryLogAnalyzerTest {
 
   @Test
   void analyze() {
-    final AnalysisReport result = sut.analyze(Fixtures.aLogString3());
+    final Method method = ReflectionUtils.findMethod(sut.getClass(), "analyze", String.class).get();
+    final AnalysisReport result = (AnalysisReport)ReflectionUtils.invokeMethod(method, sut, Fixtures.aLogString3());
 
     Assertions.assertThat(result).isNotNull();
     Assertions.assertThat(result.getLogEntries()).isNotEmpty();
@@ -40,6 +43,6 @@ class SlowQueryLogAnalyzerTest {
     Mockito.when(mockEntityManager.createNativeQuery(ArgumentMatchers.anyString()))
         .thenReturn(mockQuery);
 
-    sut = new SlowQueryLogAnalyzer(new ExplainVisitor(mockEntityManager));
+    sut = new SlowQueryLogAnalyzer(new ExecutionPlanVisitor(mockEntityManager));
   }
 }

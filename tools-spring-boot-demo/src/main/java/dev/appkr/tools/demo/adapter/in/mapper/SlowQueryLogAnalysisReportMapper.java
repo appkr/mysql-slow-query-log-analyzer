@@ -12,7 +12,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class SlowQueryLogAnalysisReportMapper {
 
+  final ServerInfoMapper serverInfoMapper;
   final SlowQueryLogEntryMapper slowQueryLogEntryMapper;
+  final QueryStatMapper queryStatMapper;
 
   public SlowQueryLogAnalysisReport toDto(AnalysisReport entity) {
     if (entity == null) {
@@ -20,8 +22,10 @@ public class SlowQueryLogAnalysisReportMapper {
     }
 
     return new SlowQueryLogAnalysisReport()
+        .serverInfo(serverInfoMapper.toDto(entity.getServerInfo()))
         .summary(toDto(entity.getSummary()))
-        .data(slowQueryLogEntryMapper.toDto(entity.getLogEntries()));
+        .data(slowQueryLogEntryMapper.toDto(entity.getLogEntries()))
+        .queryStats(queryStatMapper.toDto(entity.getTokenizedQueries().values()));
   }
 
   public SummaryReport toDto(LongSummaryStatistics entity) {
