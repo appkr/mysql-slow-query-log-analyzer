@@ -33,11 +33,15 @@ public class SlowQueryLog implements Serializable {
       .compile("^# Query_time:\\s*(?<queryTime>[0-9.]+)\\s*Lock_time:\\s*(?<lockTime>[0-9.]+)\\s*" +
                "Rows_sent:\\s*(?<rowsSent>[0-9]+)\\s*Rows_examined:\\s*(?<rowsExamined>[0-9]+)$");
 
+  // # Query_time: 1.077059  Lock_time: 0.005489 Rows_sent: 8  Rows_examined: 54728
+  static final Pattern SCHEMA_LINE = Pattern.compile("^use\\s*(?<schema>[a-zA-Z0-9_$])$");
+
   // [], All character from any language, number, special character excluding sharp(#)
   static final Pattern SQL_LINE = Pattern
       .compile("(?<sql>^(SELECT|UPDATE|DELETE|INSERT|REPLACE)\\s*[\\p{L}\\p{Nd}`~!@$%^&*()_\\-=+\\|{}:;'\\\"<>?,./\\s\\n]+)$",
           Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
 
+  String key;
   Instant time;
   String user;
   String host;
@@ -46,6 +50,7 @@ public class SlowQueryLog implements Serializable {
   Duration lockTime;    // The time to acquire locks in seconds.
   Integer rowsSent;     // The number of rows sent to the client
   Integer rowsExamined; // The number of rows examined by the server layer (not counting any processing internal to storage engines)
+  String schema;
   String sql;
   List<ExecutionPlan> executionPlans = new ArrayList<>();
 
@@ -55,6 +60,7 @@ public class SlowQueryLog implements Serializable {
           final Matcher timeLineMatcher = TIME_LINE.matcher(line);
           final Matcher userLineMatcher = USER_LINE.matcher(line);
           final Matcher statLineMatcher = STAT_LINE.matcher(line);
+          final Matcher schemaLineMatcher = SCHEMA_LINE.matcher(line);
           try {
             if (timeLineMatcher.matches()) {
               this.setTime(parseDateTimeFrom(timeLineMatcher.group("datetime").trim()));
@@ -67,6 +73,8 @@ public class SlowQueryLog implements Serializable {
               this.setLockTime(parseDurationFrom(statLineMatcher.group("lockTime").trim()));
               this.setRowsSent(parseIntegerFrom(statLineMatcher.group("rowsSent").trim()));
               this.setRowsExamined(parseIntegerFrom(statLineMatcher.group("rowsExamined").trim()));
+            } else if (schemaLineMatcher.matches()) {
+              this.setSchema(schemaLineMatcher.group("schema").trim());
             }
           } catch (Exception e) {
             log.warn("Failed to analyze: log={}", aLogParagraph);
@@ -91,8 +99,14 @@ public class SlowQueryLog implements Serializable {
     }
   }
 
-  public void accept(ExplainVisitor visitor) {
+  public void accept(ExecutionPlanVisitor visitor) {
     visitor.visit(this);
+  }
+
+  public TokenizedQuery.Tuple accept(FingerprintVisitor visitor) {
+    final TokenizedQuery.Tuple tuple = visitor.visit(this);
+    this.key = tuple.getKey();
+    return tuple;
   }
 
   Instant parseDateTimeFrom(String dateTimeString) {

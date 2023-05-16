@@ -19,6 +19,7 @@ public class SlowQueryLogEntryMapper implements DtoMapper<SlowQueryLog, SlowQuer
     }
 
     return new SlowQueryLogEntry()
+        .key(entity.getKey())
         .time(dateTimeMapper.toOffsetDateTime(entity.getTime()))
         .user(entity.getUser())
         .host(entity.getHost())

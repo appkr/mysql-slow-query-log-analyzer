@@ -3,6 +3,7 @@ package dev.appkr.tools.core.model;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -16,41 +17,64 @@ public class AnalysisReport implements Serializable {
 
   String id;
 
+  ServerInfo serverInfo;
+
   @Setter(AccessLevel.NONE)
   List<SlowQueryLog> logEntries = new ArrayList<>();
 
-  LongSummaryStatistics summary;
+  final ConcurrentHashMap<String, TokenizedQuery> tokenizedQueries = new ConcurrentHashMap<>();
+
+  final LongSummaryStatistics summary = new LongSummaryStatistics(0, 0, 0, 0);
+
+  public AnalysisReport(String id, ServerInfo serverInfo, List<SlowQueryLog> logEntries) {
+    this(serverInfo, logEntries);
+    this.id = id;
+  }
+
+  public AnalysisReport(ServerInfo serverInfo, List<SlowQueryLog> logEntries) {
+    this(logEntries);
+    this.serverInfo = serverInfo;
+  }
 
   public AnalysisReport(List<SlowQueryLog> logEntries) {
     setLogEntries(logEntries);
   }
 
-  public AnalysisReport(String id, List<SlowQueryLog> logEntries) {
-    this.id = id;
-    setLogEntries(logEntries);
-  }
-
-  public void setLogEntries(List<SlowQueryLog> logEntries) {
-    if (logEntries.isEmpty()) {
-      this.summary = new LongSummaryStatistics(0, 0, 0, 0);
-    } else {
-      this.summary = logEntries.stream()
+  void setLogEntries(List<SlowQueryLog> logEntries) {
+    this.logEntries = logEntries;
+    if (!this.logEntries.isEmpty()) {
+      final LongSummaryStatistics stats = this.logEntries.stream()
           .mapToLong(entry -> entry.getQueryTime().toMillis())
           .summaryStatistics();
+      this.summary.combine(stats);
     }
-
-    this.logEntries = logEntries;
   }
 
-  public static Predicate<SlowQueryLog> filterSpecBy(Integer filterMillis, String filterQuery) {
+  public void collectFingerprint(FingerprintVisitor visitor) {
+    if (!logEntries.isEmpty()) {
+      this.logEntries
+          .forEach(entry -> {
+            final TokenizedQuery.Tuple tuple = entry.accept(visitor);
+            if (tokenizedQueries.containsKey(tuple.getKey())) {
+              final TokenizedQuery tokenizedQuery = tokenizedQueries.get(tuple.getKey());
+              tokenizedQuery.addAndCombine(tuple);
+            } else {
+              tokenizedQueries.put(tuple.getKey(), new TokenizedQuery(tuple));
+            }
+          });
+    }
+  }
+
+  public static Predicate<SlowQueryLog> getFilterSpec(Integer slowerThanMillis, String queryType) {
     Predicate<SlowQueryLog> filterSpec = entry -> true;
-    if (filterMillis != null && filterMillis > 0) {
-      filterSpec = filterSpec.and(entry -> entry.getQueryTime().compareTo(Duration.ofMillis(filterMillis)) > 0);
+    if (slowerThanMillis != null && slowerThanMillis > 0) {
+      filterSpec = filterSpec
+          .and(entry -> entry.getQueryTime().compareTo(Duration.ofMillis(slowerThanMillis)) > 0);
     }
 
-    if (filterQuery != null && !filterQuery.isBlank()) {
-      final String allLower = filterQuery.toUpperCase();
-      final String allUpper = filterQuery.toLowerCase();
+    if (queryType != null && !queryType.isBlank()) {
+      final String allLower = queryType.toUpperCase();
+      final String allUpper = queryType.toLowerCase();
       final String regex = String.format("^(%s|%s)\\s*.+", allLower, allUpper);
 
       filterSpec = filterSpec.and(entry -> entry.getSql().matches(regex));
@@ -59,7 +83,7 @@ public class AnalysisReport implements Serializable {
     return filterSpec;
   }
 
-  public static Comparator<SlowQueryLog> sortSpecBy(Sort sort) {
+  public static Comparator<SlowQueryLog> getSortSpec(Sort sort) {
     if (sort == null || sort.isEmpty()) {
       return Comparator.comparing(SlowQueryLog::getTime);
     }
@@ -73,7 +97,7 @@ public class AnalysisReport implements Serializable {
             case "lockTime" -> Comparator.comparing(SlowQueryLog::getLockTime);
             case "rowsSent" -> Comparator.comparing(SlowQueryLog::getRowsSent);
             case "rowsExamined" -> Comparator.comparing(SlowQueryLog::getRowsExamined);
-            default -> throw new IllegalArgumentException("Unprocessable property given: property=" + property);
+            default -> throw new IllegalArgumentException("Indigestable sort property: property=" + property);
           };
 
           final Sort.Direction direction = order.getDirection();
