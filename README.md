@@ -104,7 +104,7 @@ Add library as a project dependency.
 
 ```groovy
 // build.gradle
-implementation 'dev.appkr:tools-spring-boot-starter:0.0.1-RELEASE'
+implementation 'dev.appkr:tools-spring-boot-starter:0.1.0-RELEASE'
 ```
 
 Integrate the feature to your service.
