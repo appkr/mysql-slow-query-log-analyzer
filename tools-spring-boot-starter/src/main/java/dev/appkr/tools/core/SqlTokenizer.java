@@ -2,110 +2,108 @@ package dev.appkr.tools.core;
 
 import static java.util.regex.Pattern.quote;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class SqlTokenizer {
 
-  // ... /* foo */ ...
-  static final Pattern PATTERN_COMMENT_BLOCK = Pattern.compile("/\\*+[^\\\\*]*\\*+/");
+  // /* foo */
+  static final Pattern PATTERN_BLOCK_COMMENT = Pattern.compile("\\/[*]+[^*]*[*]+\\/");
 
-  // ... -- foo; ... # foo
-  static final Pattern PATTERN_COMMENT_INLINE = Pattern.compile("(--|#).*");
+  // -- foo; # foo; ## foo; #foo
+  static final Pattern PATTERN_INLINE_COMMENT = Pattern.compile("(--|#).*");
 
   // insert into a_table(col1, col2) values('a', 'b'), ('c', 'd')
-  static final Pattern PATTERN_INSERT_QUERY = Pattern
-      .compile("insert.*values\\s*(?<v>[^;]*)", Pattern.CASE_INSENSITIVE);
+  static final Pattern PATTERN_INSERT_QUERY = Pattern.compile("insert.*values\\s*(?<v>[^;]*)");
 
-  // a = 'b'
-  static final Pattern PATTERN_EXPRESSION = Pattern.compile("(?<k>[^\\s]+)\\s*(?<o>[!><=]{1,2})\\s*'(?<v>[^']+)'");
-
-  // a = 1; a = 1.0
-  static final Pattern PATTERN_NUM_EXPRESSION = Pattern.compile("(?<k>[^\\s]+)\\s*(?<o>[!><=]{1,2})\\s*(?<v>[0-9.]+)");
-
-  // a like 'b'; a not like 'b';
-  static final Pattern PATTERN_LIKE_EXPRESSION = Pattern
-      .compile("(?<k>[^\\s]+)\\s*(?<o>(not)?\\s+like)\\s+'(?<v>[^']+)'", Pattern.CASE_INSENSITIVE);
-
-  // a in (1, 2); a in ('foo', 'bar'); a between (1 and 2); a between ('foo' and 'bar')
-  static final Pattern PATTERN_IN_EXPRESSION = Pattern
-      .compile("(?<k>[^\\s]+)\\s*in\\s*\\((?<v>[^\\)]+)\\)", Pattern.CASE_INSENSITIVE);
-
-  // a in (1, 2); a in ('foo', 'bar'); a between (1 and 2); a between ('foo' and 'bar')
-  static final Pattern PATTERN_BETWEEN_EXPRESSION = Pattern
-      .compile("(?<k>[^\\s]+)\\s*between\\s+(?<v>[^\\s]+\\s*and\\s*[^\\s;]+)", Pattern.CASE_INSENSITIVE);
-
-  // offset 0; offset 1000; limit 5; limit 100, 100
-  static final Pattern PATTERN_PAGING_EXPRESSION = Pattern
-      .compile("(?<o>offset|limit)\\s+(?<v>[0-9]+(\\s*,\\s*[0-9]+)?)", Pattern.CASE_INSENSITIVE);
+  // foo='bar'; foo="bar"; foo=1
+  static final Pattern PATTERN_DENSE_EXPRESSION = Pattern
+      .compile("(?<k>[^!><=\\s]+)(?<o>[!><=]{1,2})(?<v>[^!><=\\s]+)");
 
   public static String tokenize(String query) {
-    // Remove inline comment first; then Remove new line; then remove block comment
-    query = PATTERN_COMMENT_INLINE.matcher(query)
-        .replaceAll("")
-        .replaceAll("\\n", " ");
-    final Matcher cm = PATTERN_COMMENT_BLOCK.matcher(query);
-    while (cm.find()) {
-      query = query.replaceAll(quote(cm.group()), "");
-    }
-
-    // Remove redundant white space
-    // Replace empty parameter value into question mark
-    query = query
-        .replaceAll("[\\s]{2,}", " ")
-        .replaceAll("'\\s*'", "'?'")
-        .replaceAll("\\\"\\s*\\\"", "'?'")
+    // Remove inline comment
+    // Join lines
+    // Removing semicolon
+    // Remove backtick
+    // Replace all ascii char to lower case
+    // Remove leading and trailing white spaces
+    query = PATTERN_INLINE_COMMENT.matcher(query).replaceAll("")
+        .replaceAll("\\n", " ")
+        .replaceAll(quote(";"), "")
+        .replaceAll(quote("`"), "")
+        .toLowerCase()
         .trim();
 
-    // Replace bound parameters with question marks for INSERT query
-    final Matcher iqm = PATTERN_INSERT_QUERY.matcher(query);
-    if (iqm.find()) {
-      query = query.replaceAll(quote(iqm.group("v")), "(?)");
+    // Remove block comment
+    final Matcher m1 = PATTERN_BLOCK_COMMENT.matcher(query);
+    while (m1.find()) {
+      query = query.replaceAll(quote(m1.group()), " ");
     }
 
-    // Replace bound parameters with question marks for other queries
-    final Matcher em = PATTERN_EXPRESSION.matcher(query);
-    while (em.find()) {
-      query = query.replace(em.group(),
-          String.join(" ", em.group("k"), em.group("o"), "?"));
+    // Replace bound parameters with question marks for INSERT query and return early
+    final Matcher insertQueryMatcher = PATTERN_INSERT_QUERY.matcher(query);
+    if (insertQueryMatcher.matches()) {
+      return query.replaceAll(quote(insertQueryMatcher.group("v")), "(?)");
     }
 
-    final Matcher nm = PATTERN_NUM_EXPRESSION.matcher(query);
-    while (nm.find()) {
-      // Skip 1 = 1
-      if (!nm.group("k").equals(nm.group("v"))) {
-        query = query.replace(nm.group(),
-            String.join(" ", nm.group("k"), nm.group("o"), "?"));
+    // Normalize white spaces: insert space if required
+    // foo='bar' -> foo = 'bar'
+    final Matcher m2 = PATTERN_DENSE_EXPRESSION.matcher(query);
+    while (m2.find()) {
+      query = query.replaceAll(quote(m2.group()),
+          String.join(" ", m2.group("k"), m2.group("o"), m2.group("v")));
+    }
+
+    // Split by white space
+    final List<String> tokens = List.of(query.split("\\s+"));
+
+    // Replace bound parameters with question mark
+    final List<String> normalizedTokens = new ArrayList<>();
+    for (int i = 0; i < tokens.size(); i++) {
+      final String prev = (i - 1 >= 0) ? tokens.get(i - 1) : "";
+      final String current = tokens.get(i).trim();
+      String next = (i + 1 < tokens.size()) ? tokens.get(i + 1) : "";
+
+      if (current.isBlank()) {
+        continue;
+      } else if (current.matches("[!><=]{1,2}")) {
+        if (prev.equals(next)) {
+          // 1 = 1; 1 <> 1
+          normalizedTokens.add(current);
+          normalizedTokens.add(next);
+        } else {
+          normalizedTokens.add(current);
+          normalizedTokens.add("?");
+        }
+        i++;
+      } else if (current.equals("like")) {
+        normalizedTokens.add(current);
+        normalizedTokens.add("?");
+        i++;
+      } else if (current.equals("in")) {
+        normalizedTokens.add(current);
+        normalizedTokens.add("(?)");
+        i++;
+        while(next.matches(".*[^)]$")) {
+          next = (i + 1 < tokens.size()) ? tokens.get(i + 1) : "";
+          i++;
+        }
+      } else if (current.equals("between")) {
+        normalizedTokens.add(current);
+        normalizedTokens.add("? and ?");
+        i += 3;
+      } else if (current.matches("offset|limit")) {
+        normalizedTokens.add(current);
+        normalizedTokens.add("?");
+        i = tokens.size();
+      } else {
+        normalizedTokens.add(current);
       }
     }
 
-    final Matcher lm = PATTERN_LIKE_EXPRESSION.matcher(query);
-    while (lm.find()) {
-      query = query.replace(lm.group(),
-          String.join(" ", lm.group("k"), lm.group("o"), "?"));
-    }
-
-    final Matcher im = PATTERN_IN_EXPRESSION.matcher(query);
-    while (im.find()) {
-      query = query.replace(im.group(),
-          String.join(" ", im.group("k"), "in (?)"));
-    }
-
-    final Matcher bm = PATTERN_BETWEEN_EXPRESSION.matcher(query);
-    while (bm.find()) {
-      query = query.replace(bm.group(),
-          String.join(" ", bm.group("k"), "between ? and ?"));
-    }
-
-    final Matcher pm = PATTERN_PAGING_EXPRESSION.matcher(query);
-    while (pm.find()) {
-      query = query.replace(pm.group(), String.join(" ", pm.group("o"), "?"));
-    }
-
-    // Remove single and double quotes; Re-replace redundant white space; Replace keyword to all lower case
-    return query
-        .replaceAll("'|\\\"", "")
-        .replaceAll("[\\s]{2,}", " ")
-        .toLowerCase();
+    return normalizedTokens.stream().collect(Collectors.joining(" "));
   }
 }

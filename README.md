@@ -104,7 +104,7 @@ Add library as a project dependency.
 
 ```groovy
 // build.gradle
-implementation 'dev.appkr:tools-spring-boot-starter:0.1.0-RELEASE'
+implementation 'dev.appkr:tools-spring-boot-starter:0.1.1-RELEASE'
 ```
 
 Integrate the feature to your service.
@@ -115,11 +115,13 @@ public class YourService {
   
   void yourMethod() {
     java.nio.file.Path path = Paths.of("/path/to/your/slow.log");
-    Integer filterMillis = 200;
-    String filterQuery = "SELECT";
-    org.springframework.data.domain.Sort sortSpec = Sort.by(Sort.Direction.DESC, "queryTime");
+    dev.appkr.tools.core.model.LogFilter filter = LogFilter.build()
+        .slowerThanMillis(200)
+        .queryType("SELECT")
+        .sort(Sort.by(Sort.Direction.DESC, "queryTime"))
+        .build();
     
-    dev.appkr.tools.core.model.AnalysisReport report = analyzer.analyze(path, filterMillis, filterQuery, sortSpec);
+    dev.appkr.tools.core.model.AnalysisReport report = analyzer.analyze(path, filter);
   }
 }
 ```
@@ -171,3 +173,7 @@ Run MySQL(3306, root / secret) using following command
 ## Contribution
 
 Issue and PRs are always welcomed.
+
+## TODO
+
+[ ] sub-query support in SqlTokenizer
