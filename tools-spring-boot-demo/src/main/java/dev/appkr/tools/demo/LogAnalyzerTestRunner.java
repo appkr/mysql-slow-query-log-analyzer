@@ -14,7 +14,7 @@ import org.springframework.context.event.EventListener;
 
 //@Component
 @RequiredArgsConstructor
-public class TestRunner {
+public class LogAnalyzerTestRunner {
 
   final FilterableLogAnalyzer analyzer;
 
