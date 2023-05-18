@@ -104,7 +104,7 @@ Add library as a project dependency.
 
 ```groovy
 // build.gradle
-implementation 'dev.appkr:tools-spring-boot-starter:0.1.1-RELEASE'
+implementation 'dev.appkr:tools-spring-boot-starter:0.1.2-RELEASE'
 ```
 
 Integrate the feature to your service.
@@ -118,7 +118,7 @@ public class YourService {
     dev.appkr.tools.core.model.LogFilter filter = LogFilter.build()
         .slowerThanMillis(200)
         .queryType("SELECT")
-        .sort(Sort.by(Sort.Direction.DESC, "queryTime"))
+        .sort("queryTime:desc")
         .build();
     
     dev.appkr.tools.core.model.AnalysisReport report = analyzer.analyze(path, filter);

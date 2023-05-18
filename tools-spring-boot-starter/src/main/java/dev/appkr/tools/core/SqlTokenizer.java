@@ -19,9 +19,12 @@ public class SqlTokenizer {
   // insert into a_table(col1, col2) values('a', 'b'), ('c', 'd')
   static final Pattern PATTERN_INSERT_QUERY = Pattern.compile("insert.*values\\s*(?<v>[^;]*)");
 
-  // foo='bar'; foo="bar"; foo=1
-  static final Pattern PATTERN_DENSE_EXPRESSION = Pattern
-      .compile("(?<k>[^!><=\\s]+)(?<o>[!><=]{1,2})(?<v>[^!><=\\s]+)");
+  // foo="bar"; foo=1; foo= 1; foo =1; foo='bar'
+  static final Pattern PATTERN_EXPRESSION_TYPE1 = Pattern
+      .compile("(?<k>[^!><=\\s]+)\\s?(?<o>[!><=]{1,2})\\s?(?<v>[^!><=\\s]+)");
+
+  // foo in('bar')
+  static final Pattern PATTERN_EXPRESSION_TYPE2 = Pattern.compile("(?:\\s+)(?<o>in)\\((?<v>[^\\s]+)");
 
   public static String tokenize(String query) {
     // Remove inline comment
@@ -50,11 +53,18 @@ public class SqlTokenizer {
     }
 
     // Normalize white spaces: insert space if required
-    // foo='bar' -> foo = 'bar'
-    final Matcher m2 = PATTERN_DENSE_EXPRESSION.matcher(query);
+    // foo='bar' -> foo = 'bar'; foo in('bar','baz') -> foo in ('bar','baz')
+    final Matcher m2 = PATTERN_EXPRESSION_TYPE1.matcher(query);
     while (m2.find()) {
       query = query.replaceAll(quote(m2.group()),
           String.join(" ", m2.group("k"), m2.group("o"), m2.group("v")));
+    }
+
+    // foo in('bar') -> foo in ('bar')
+    final Matcher m3 = PATTERN_EXPRESSION_TYPE2.matcher(query);
+    while (m3.find()) {
+      query = query.replaceAll(quote(m3.group()),
+          String.join(" ", "", m3.group("o"), m3.group("v")));
     }
 
     // Split by white space

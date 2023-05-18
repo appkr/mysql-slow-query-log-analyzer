@@ -68,7 +68,7 @@ insert into regions (d1, d2, d3, d4) values ('foo', 'bar', 'baz', 'qux'),
 
   @Test
   void replaceInParameters() {
-    String query = "select * from a_table where a in (1,2) or b in (\\\"foo\\\", 'bar');";
+    String query = "select * from a_table where a in(1,2) or b in(\\\"foo\\\", 'bar');";
 
     assertThat(tokenize(query))
         .isEqualTo("select * from a_table where a in (?) or b in (?)");
